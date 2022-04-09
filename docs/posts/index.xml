@@ -8,12 +8,12 @@
     <language>en-us</language>
     <lastBuildDate>Sun, 24 Feb 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://r44wk.github.io/my_launchx_blog/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Título de tu blog post</title>
+      <title>Privilege Escalation Linux</title>
       <link>https://r44wk.github.io/my_launchx_blog/posts/post_1/</link>
       <pubDate>Fri, 08 Apr 2022 00:00:00 +0000</pubDate>
       
       <guid>https://r44wk.github.io/my_launchx_blog/posts/post_1/</guid>
-      <description>#====================================================================================================================================== #================================================= PRIVILEGE ESCALATION LINUX ========================================================= #====================================================================================================================================== $PERMISOS
+      <description>$PERMISOS
 En linux los permisos se establecen entres niveles:
  Permisos de propietario Permisos del grupo Permisos del resto de usr (&amp;ldquo;otros&amp;rdquo;)  -Las cunetas de usr se configuran en /etc/passwd -Los hash de las contraseñas se almacenana en /etc/shadow -Cada uno de los usuarios se identifican bajo un identificador llamado UID (User Identifier) -Hay 3 tipos de UID definidos para un proceso: *Real: es la cta del propietario de este proceso.</description>
     </item>
